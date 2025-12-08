@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Wykres na żywo (Flask + Plotly + HTMX)</h1>
+<div id="plotly-div"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='plot.js') }}"></script>
+{% endblock %}

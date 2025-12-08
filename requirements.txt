@@ -1,0 +1,23 @@
+Adafruit-Blinka==8.67.0
+Adafruit-Blinka-Raspberry-Pi5-Neopixel==1.0.0rc2
+adafruit-circuitpython-bme280==2.6.30
+adafruit-circuitpython-busdevice==5.2.14
+adafruit-circuitpython-connectionmanager==3.1.6
+adafruit-circuitpython-icm20x==2.1.8
+adafruit-circuitpython-ltr390==1.1.22
+adafruit-circuitpython-register==1.11.1
+adafruit-circuitpython-requests==4.1.15
+adafruit-circuitpython-tsl2591==1.4.5
+adafruit-circuitpython-typing==1.12.3
+Adafruit-PlatformDetect==3.84.1
+Adafruit-PureIO==1.1.11
+RPi.GPIO==0.7.1
+RPLCD
+smbus2
+gpiozero
+# Plots
+Flask==3.0.0
+plotly==5.21.0
+htmx-flask
+pandas
+
