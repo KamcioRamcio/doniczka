@@ -1,7 +1,6 @@
-# pompa i serwo
 import time
 import pigpio
-from sensors import SensorHub
+from hardware.sensors import SensorHub
 from gpiozero import OutputDevice
 
 class Servo:
@@ -24,12 +23,10 @@ class Servo:
 
         self.pi.set_servo_pulsewidth(self.servo_pin, pulse_width)
 
-    # zakladamy optimal light na 200lux
     def adjust_servo(self):
-        angle = 0
+        angle = self.current_positon if self.current_positon is not None else 0
         current_light = self.light_value
         while current_light < 200 and (angle > -70 or angle < 70):
-            print(f"aktualne swiatlo: {current_light}")
             self.set_servo_angle(angle)
             temp_light = self.read_light()
             if temp_light >= current_light:
@@ -39,19 +36,17 @@ class Servo:
                 angle -= 5
                 current_light = temp_light
             else:
-                print("blad")
                 break
-        self.current_positon = angle #todo jakos uzywac tego do obrotu np dac angle = self.c...
+        self.current_positon = angle
+
     def run_servo(self):
         self._pi_setup()
         self.adjust_servo()
 
-    def rotate_plant(self, current_positon : int):
+    def rotate_plant(self, current_positon : int, sleep_time: float = 30):
         angle = current_positon
         self.set_servo_angle(angle)
         time.sleep(2)
-
-
 
         if 1 <= angle < 60:
             angle += 5
@@ -62,17 +57,30 @@ class Servo:
         elif angle >= 60:
             while angle >= 1:
                 angle -= 5
-                self.set_servo_angle(angle )
-                time.sleep(0.5)
+                self.set_servo_angle(angle)
+                time.sleep(sleep_time)
         elif angle <= -60:
             while angle <= 0:
                 angle += 5
                 self.set_servo_angle(angle)
-                time.sleep(0.5)
+                time.sleep(sleep_time)
         time.sleep(1.5)
         return self.rotate_plant(angle)
 
 
+    def user_rotate_plant(self, direction: str, current_positon: int):
+        angle = current_positon
+        self.set_servo_angle(angle)
+        time.sleep(0.5)
+
+        if direction == "right" and angle < 70:
+            angle += 10
+            self.set_servo_angle(angle)
+        elif direction == "left" and angle > -70:
+            angle -= 10
+            self.set_servo_angle(angle)
+        time.sleep(0.5)
+        return angle
 
 class Pump:
     def __init__(self):
@@ -91,7 +99,6 @@ class Pump:
         current_moisture = self.moisture_value
         while current_moisture < 30:
             self.relay.on()
-            print("Pompowanie woedy przez 1 sekunde")
             time.sleep(1)
             self.relay.off()
             current_moisture = self.read_moisture()
@@ -100,18 +107,24 @@ class Pump:
         self._relay_setup()
         self.water_plant()
 
+    def user_water_plant(self, duration: int):
+        if duration is None or duration > 2:
+            duration = 1
 
-#todo: można dodać wywoływanie tych klas po odczycie z bazy danych wartości niższych niż wymagane
+        self._relay_setup()
+        self.relay.on()
+        time.sleep(duration)
+        self.relay.off()
+        self.relay.close()
+
+    def stop_pump(self):
+        self.relay.off()
 
 
 def main():
     test = Servo()
-
     test.rotate_plant(0)
 
 if __name__ == "__main__":
     main()
-
-
-
 

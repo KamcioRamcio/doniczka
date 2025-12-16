@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontrola Rotacji Rośliny</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .angle-display {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .angle-bar {
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to right, #e74c3c, #f39c12, #2ecc71);
+            border-radius: 15px;
+            position: relative;
+            margin: 20px 0 40px 0;
+        }
+
+        .angle-indicator {
+            position: absolute;
+            top: -5px;
+            width: 4px;
+            height: 40px;
+            background: #2c3e50;
+            border-radius: 2px;
+            transition: left 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .angle-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .control-btn {
+            width: 150px;
+            height: 150px;
+            font-size: 1.5rem;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-left {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-right {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .reset-btn {
+            width: 120px;
+            height: 50px;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .reset-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .water-btn {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .water-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .water-btn:active {
+            transform: scale(0.95);
+        }
+
+        .water-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stop-pump-btn {
+            width: 100px;
+            height: 50px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-top: 15px;
+        }
+
+        .stop-pump-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .stop-pump-btn:active {
+            transform: scale(0.95);
+        }
+
+        .stop-pump-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kontrola Rotacji Rośliny</h1>
+
+        <div class="control-panel">
+            <div class="angle-display">
+                Kąt: <span id="angle-value">0</span>°
+            </div>
+
+            <div class="angle-bar">
+                <div class="angle-indicator" id="angle-indicator"></div>
+            </div>
+            <div class="angle-labels">
+                <span>-70° (Lewo)</span>
+                <span>0° (Środek)</span>
+                <span>70° (Prawo)</span>
+            </div>
+
+            <div class="button-container">
+                <button class="control-btn btn-left" id="btn-left" onclick="rotateLeft()">
+                    ← LEWO
+                </button>
+                <button class="control-btn btn-right" id="btn-right" onclick="rotateRight()">
+                    PRAWO →
+                </button>
+            </div>
+
+            <div class="reset-container">
+                <button class="reset-btn" onclick="resetPosition()">
+                    RESET (0°)
+                </button>
+            </div>
+
+            <div class="reset-container" style="margin-top: 40px; border-top: 2px solid #ecf0f1; padding-top: 30px;">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">Podlewanie Rośliny</h3>
+                <button class="water-btn" id="btn-water" onclick="waterPlant()">
+                    💧 PODLEJ<br><span style="font-size: 0.8rem;">(1 sekunda)</span>
+                </button>
+                <button class="stop-pump-btn" id="btn-stop-pump" onclick="stopPump()">
+                    🛑 STOP
+                </button>
+            </div>
+
+            <div class="status-message" id="status-message"></div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">← Powrót do Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        let currentAngle = 0;
+        let isRotating = false;
+
+        function updateAngleDisplay(angle) {
+            currentAngle = angle;
+            document.getElementById('angle-value').textContent = angle;
+
+            const percentage = ((angle + 70) / 140) * 100;
+            const indicatorPosition = `calc(${percentage}% - 2px)`;
+            document.getElementById('angle-indicator').style.left = indicatorPosition;
+
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+
+            btnLeft.disabled = currentAngle <= -70 || isRotating;
+            btnRight.disabled = currentAngle >= 70 || isRotating;
+        }
+
+        function showStatus(message, isError = false) {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + (isError ? 'status-error' : 'status-success');
+            statusEl.style.display = 'block';
+
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+
+        async function rotateLeft() {
+            if (isRotating || currentAngle <= -70) return;
+
+            isRotating = true;
+            updateButtonStates();
+
+            try {
+                const response = await fetch('/api/control/rotate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ direction: 'left' })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateAngleDisplay(data.current_angle);
+                    showStatus('Obrót w lewo: ' + data.current_angle + '°');
+                } else {
+                    showStatus('Błąd: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Błąd połączenia: ' + error.message, true);
+            } finally {
+                isRotating = false;
+                updateButtonStates();
+            }
+        }
+
+        async function rotateRight() {
+            if (isRotating || currentAngle >= 70) return;
+
+            isRotating = true;
+            updateButtonStates();
+
+            try {
+                const response = await fetch('/api/control/rotate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ direction: 'right' })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateAngleDisplay(data.current_angle);
+                    showStatus('Obrót w prawo: ' + data.current_angle + '°');
+                } else {
+                    showStatus('Błąd: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Błąd połączenia: ' + error.message, true);
+            } finally {
+                isRotating = false;
+                updateButtonStates();
+            }
+        }
+
+        async function resetPosition() {
+            if (isRotating) return;
+
+            isRotating = true;
+            updateButtonStates();
+
+            try {
+                const response = await fetch('/api/control/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateAngleDisplay(data.current_angle);
+                    showStatus('Pozycja zresetowana do 0°');
+                } else {
+                    showStatus('Błąd: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Błąd połączenia: ' + error.message, true);
+            } finally {
+                isRotating = false;
+                updateButtonStates();
+            }
+        }
+
+        async function waterPlant() {
+            if (isRotating) return;
+
+            const btnWater = document.getElementById('btn-water');
+            btnWater.disabled = true;
+            isRotating = true;
+
+            try {
+                showStatus('Podlewanie w toku...');
+
+                const response = await fetch('/api/control/water', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ duration: 1 })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus('Podlewanie zakończone (1 sekunda)');
+                } else {
+                    showStatus('Błąd: ' + data.error, true);
+                }
+            } catch (error) {
+                showStatus('Błąd połączenia: ' + error.message, true);
+            } finally {
+                isRotating = false;
+                btnWater.disabled = false;
+                updateButtonStates();
+            }
+        }
+
+        async function stopPump() {
+            try {
+                const btnStop = document.getElementById('btn-stop-pump');
+                btnStop.disabled = true;
+
+                const response = await fetch('/api/control/stop-pump', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus('Pompa zatrzymana');
+                } else {
+                    showStatus('Błąd: ' + data.error, true);
+                }
+
+                setTimeout(() => {
+                    btnStop.disabled = false;
+                }, 1000);
+            } catch (error) {
+                showStatus('Błąd połączenia: ' + error.message, true);
+                document.getElementById('btn-stop-pump').disabled = false;
+            }
+        }
+
+        async function fetchCurrentAngle() {
+            try {
+                const response = await fetch('/api/control/angle');
+                const data = await response.json();
+                updateAngleDisplay(data.current_angle);
+            } catch (error) {
+                console.error('Error fetching angle:', error);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            fetchCurrentAngle();
+            updateButtonStates();
+        });
+    </script>
+</body>
+</html>
+

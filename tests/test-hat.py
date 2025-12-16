@@ -19,7 +19,6 @@ try:
 
     bme280_available = True
 except ImportError:
-    print("⚠️  BME280 library not installed")
     bme280_available = False
 
 try:
@@ -27,7 +26,6 @@ try:
 
     tsl2591_available = True
 except ImportError:
-    print("⚠️  TSL2591 library not installed")
     tsl2591_available = False
 
 try:
@@ -35,7 +33,6 @@ try:
 
     icm20948_available = True
 except ImportError:
-    print("⚠️  ICM20948 library not installed")
     icm20948_available = False
 
 try:
@@ -43,53 +40,42 @@ try:
 
     ltr390_available = True
 except ImportError:
-    print("⚠️  LTR390 library not installed")
     ltr390_available = False
 
 
 def init_sensors():
     """Inicjalizacja wszystkich czujników"""
 
-    print("🔧 Inicjalizacja magistrali I2C...")
-    i2c = board.I2C()  # uses board.SCL and board.SDA
+    i2c = board.I2C()
 
     sensors = {}
 
-    # BME280 - Temperatura, Wilgotność, Ciśnienie
     if bme280_available:
         try:
             sensors['bme280'] = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=0x76)
-            # Konfiguracja - tryb normalny
             sensors['bme280'].mode = adafruit_bme280.MODE_NORMAL
             sensors['bme280'].standby_period = adafruit_bme280.STANDBY_TC_500
             sensors['bme280'].iir_filter = adafruit_bme280.IIR_FILTER_X16
-            print("✅ BME280 (Temp/Humidity/Pressure) - OK")
         except Exception as e:
-            print(f"❌ BME280 initialization failed: {e}")
+            pass
 
-    # TSL2591 - Światło (Lux)
     if tsl2591_available:
         try:
             sensors['tsl2591'] = TSL2591(i2c)
-            print("✅ TSL2591 (Light sensor) - OK")
         except Exception as e:
-            print(f"❌ TSL2591 initialization failed: {e}")
+            pass
 
-    # ICM20948 - Akcelerometr + Żyroskop + Magnetometr
     if icm20948_available:
         try:
             sensors['icm20948'] = ICM20948(i2c, address=0x68)
-            print("✅ ICM20948 (Accelerometer/Gyro/Magnetometer) - OK")
         except Exception as e:
-            print(f"❌ ICM20948 initialization failed: {e}")
+            pass
 
-    # LTR390 - UV (promieniowanie UV)
     if ltr390_available:
         try:
             sensors['ltr390'] = adafruit_ltr390.LTR390(i2c, address=0x53)
-            print("✅ LTR390 (UV sensor) - OK")
         except Exception as e:
-            print(f"❌ LTR390 initialization failed: {e}")
+            pass
 
     return sensors
 

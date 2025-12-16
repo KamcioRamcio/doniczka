@@ -1,8 +1,7 @@
-// File: `intDoniczka/arduino/arduino.ino`
 const int SOIL_PIN = A0;
 const int SAMPLES = 8;
-const int DRY = 505;
-const int WET = 240;
+const int DRY = 650;
+const int WET = 200;
 const unsigned long INTERVAL = 500;
 
 void setup() {

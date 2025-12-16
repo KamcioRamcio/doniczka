@@ -1,4 +1,4 @@
-from flask_app import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify
 import sqlite3
 import pandas as pd
 from pathlib import Path
@@ -7,41 +7,30 @@ hat_sensor_bp = Blueprint('hat_sensor', __name__)
 
 
 def get_sensor_data(limit=40):
-    """
-    Pobiera ostatnie pomiary WSZYSTKICH czujników z bazy danych.
-
-    Args:
-        limit (int): Liczba ostatnich pomiarów
-
-    Returns:
-        pd.DataFrame: DataFrame z kolumnami: id, temperature, pressure, humidity, light, uv
-    """
+    """Pobiera ostatnie pomiary wszystkich czujników z bazy danych."""
     conn = None
     try:
-        # Ścieżka do bazy danych
         project_root = Path(__file__).resolve().parent.parent
         db_path = "database/doniczka.db"
 
         conn = sqlite3.connect(str(db_path))
 
-        # Pobierz wszystkie kolumny czujników
         query = f"""
-            SELECT id, temperature, pressure, humidity, light, uv
-            FROM env_sensor 
-            ORDER BY id DESC 
+            SELECT e.id, e.temperature, e.pressure, e.humidity, e.light, e.uv, m.moisture, e.time_pnt
+            FROM env_sensor e
+            JOIN moist_sensor m ON e.id = m.id
+            ORDER BY e.id DESC 
             LIMIT {limit}
         """
 
         df = pd.read_sql_query(query, conn)
 
-        # Odwróć kolejność (najstarsze na początku)
         df = df.iloc[::-1].reset_index(drop=True)
 
         return df
 
     except sqlite3.Error as e:
-        print(f"❌ Błąd bazy danych: {e}")
-        return pd.DataFrame(columns=['id', 'temperature', 'pressure', 'humidity', 'light', 'uv'])
+        return pd.DataFrame(columns=['id', 'temperature', 'pressure', 'humidity', 'light', 'uv', 'moisture', 'time_pnt'])
 
     finally:
         if conn:
@@ -50,75 +39,63 @@ def get_sensor_data(limit=40):
 
 @hat_sensor_bp.route('/')
 def index():
-    """Strona główna - Dashboard z 5 wykresami"""
-    print("📊 Dashboard HAT - route accessed")
+    """Strona główna - Dashboard"""
     return render_template('dashboard.html')
 
 
 @hat_sensor_bp.route('/api/sensors/all')
 def get_all_sensors():
-    """
-    API endpoint zwracający WSZYSTKIE dane czujników.
-
-    Returns:
-        JSON: {
-            "temperature": [{x: id, y: temp}, ...],
-            "pressure": [{x: id, y: press}, ...],
-            "humidity": [{x: id, y: hum}, ...],
-            "light": [{x: id, y: lux}, ...],
-            "uv": [{x: id, y: uv}, ...]
-        }
-    """
+    """API endpoint zwracający wszystkie dane czujników."""
     try:
         df = get_sensor_data(limit=40)
 
         if df.empty:
-            print("⚠️  Brak danych w bazie")
             return jsonify({
                 "temperature": [],
                 "pressure": [],
                 "humidity": [],
                 "light": [],
-                "uv": []
+                "uv": [],
+                "moisture": [],
+                "time_pnt": []
             })
 
-        # Konwertuj każdą kolumnę na osobny dataset
         response = {
             "temperature": [
-                {"x": int(row['id']), "y": float(row['temperature']) if pd.notna(row['temperature']) else None}
+                {"x": row['time_pnt'], "y": float(row['temperature']) if pd.notna(row['temperature']) else None}
                 for _, row in df.iterrows()
             ],
             "pressure": [
-                {"x": int(row['id']), "y": float(row['pressure']) if pd.notna(row['pressure']) else None}
+                {"x": row['time_pnt'], "y": float(row['pressure']) if pd.notna(row['pressure']) else None}
                 for _, row in df.iterrows()
             ],
             "humidity": [
-                {"x": int(row['id']), "y": float(row['humidity']) if pd.notna(row['humidity']) else None}
+                {"x": row['time_pnt'], "y": float(row['humidity']) if pd.notna(row['humidity']) else None}
                 for _, row in df.iterrows()
             ],
             "light": [
-                {"x": int(row['id']), "y": float(row['light']) if pd.notna(row['light']) else None}
+                {"x": row['time_pnt'], "y": float(row['light']) if pd.notna(row['light']) else None}
                 for _, row in df.iterrows()
             ],
             "uv": [
-                {"x": int(row['id']), "y": float(row['uv']) if pd.notna(row['uv']) else None}
+                {"x": row['time_pnt'], "y": float(row['uv']) if pd.notna(row['uv']) else None}
+                for _, row in df.iterrows()
+            ],
+            "moisture": [
+                {"x": row['time_pnt'], "y": float(row['moisture']) if pd.notna(row['moisture']) else None}
                 for _, row in df.iterrows()
             ]
         }
 
-        print(f"✅ Zwrócono dane dla {len(df)} pomiarów (5 czujników)")
         return jsonify(response)
 
     except Exception as e:
-        print(f"❌ Błąd w /api/sensors/all: {e}")
         return jsonify({"error": str(e)}), 500
 
 
 @hat_sensor_bp.route('/api/stats')
 def get_stats():
-    """
-    API endpoint ze statystykami dla wszystkich czujników
-    """
+    """API endpoint ze statystykami dla wszystkich czujników."""
     try:
         df = get_sensor_data(limit=100)
 
@@ -161,5 +138,4 @@ def get_stats():
         return jsonify(stats)
 
     except Exception as e:
-        print(f"❌ Błąd w /api/stats: {e}")
         return jsonify({"error": str(e)}), 500

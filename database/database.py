@@ -2,8 +2,6 @@ import sqlite3
 import time
 from datetime import datetime
 from hardware.sensors import SensorHub
-import asyncio
-import json
 
 class Database:
     def __init__(self, num_readings : int):
@@ -71,7 +69,6 @@ def main():
             time.sleep(10)
     except KeyboardInterrupt:
         result = db.read_db()
-        print(result)
         return
 
 if __name__ == "__main__":

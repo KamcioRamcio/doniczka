@@ -14,7 +14,7 @@ from datetime import datetime
 
 
 class SensorHub:
-    """Klasa do obsługi czujników na Waveshare Environment Sensor HAT"""
+    """Klasa do obsługi czujników na Waveshare Environment Sensor HAT."""
 
     def __init__(self, num_reads : int):
         self.num_reads = num_reads
@@ -24,7 +24,6 @@ class SensorHub:
         self.tsl2591 = TSL2591(self.i2c)
         self.ltr390 = adafruit_ltr390.LTR390(self.i2c, address=0x53)
 
-        # temperatura
         self.temperatura = None
         self.pressure = None
         self.humidity = None
@@ -34,8 +33,6 @@ class SensorHub:
 
         self.moisture = None
 
-
-        # arduino moisture
         self.serial_port = '/dev/ttyACM0'
         self.baud_rate = 9600
         self.timoute = 1
@@ -75,13 +72,10 @@ class SensorHub:
 
         self.uvi = round(sum(uv_list) / self.num_reads, 2)
 
-        # print(f'temperatura : {self.temperatura}, cisnienie {self.pressure}, wilgotnosc {self.humidity}')
-        # print(f'światlo lux {self.light}')
-        # print(f'indeks uv {self.uvi}')
         return self.temperatura
 
     async def read_arduino(self):
-        """Robust read from Arduino: waits for device, reads lines, parses percent or SOIL:raw:percent."""
+        """Odczyt wilgotności gleby z Arduino."""
         try:
             ser = serial.Serial(self.serial_port, self.baud_rate, timeout=1)
             await asyncio.sleep(2)
@@ -90,13 +84,13 @@ class SensorHub:
             readings = []
             attempts = 0
             while len(readings) < self.num_reads and attempts < self.num_reads * 5:
-                line = ser.readline()  # bytes or b''
+                line = ser.readline()
                 attempts += 1
                 if not line:
                     continue
                 try:
                     text = line.decode('utf-8', errors='replace').strip()
-                    value = int(text)
+                    value = int(text) - 30 # Kalibracja czujnika
                     readings.append(value)
                 except (ValueError, IndexError):
                     continue
@@ -105,11 +99,8 @@ class SensorHub:
             ser.close()
             if readings:
                 self.moisture = round(sum(readings) / len(readings), 2)
-                # print(f'wilgotnosc {self.moisture} %')
-            else:
-                print("No valid readings received")
         except serial.SerialException as e:
-            print(f"❌ Błąd Serial: {e}")
+            pass
 
     async def data_pipline(self):
         functions = await asyncio.gather(
@@ -129,8 +120,8 @@ class SensorHub:
             "time_pnt": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-    # helper dla servo
     def read_light(self):
+        """Helper dla servo - odczyt światła."""
         light = []
         for i in range(2):
             lux = self.tsl2591.lux
@@ -140,8 +131,8 @@ class SensorHub:
         avg_light = round(sum(light) / 2, 2)
         return avg_light
 
-    # helper dla pump
     def read_moisture(self):
+        """Helper dla pump - odczyt wilgotności."""
         try:
             ser = serial.Serial(self.serial_port, self.baud_rate, timeout=1)
             time.sleep(2)
@@ -150,7 +141,7 @@ class SensorHub:
             readings = []
             attempts = 0
             while len(readings) < self.num_reads and attempts < self.num_reads * 5:
-                line = ser.readline()  # bytes or b''
+                line = ser.readline()
                 attempts += 1
                 if not line:
                     continue
@@ -166,9 +157,7 @@ class SensorHub:
             if readings:
                 moisture = round(sum(readings) / len(readings), 2)
                 return moisture
-            else:
-                print("No valid readings received")
         except serial.SerialException as e:
-            print(f"❌ Błąd Serial: {e}")
+            pass
 
 

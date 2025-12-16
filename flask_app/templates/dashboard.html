@@ -61,70 +61,101 @@
         .update-indicator.active {
             font-weight: bold;
         }
+
+        .nav-controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .nav-controls a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-controls a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid">
-        <h1>🌱 Dashboard - Czujniki Środowiskowe HAT</h1>
+        <h1>Dashboard - Czujniki Środowiskowe HAT</h1>
+
+        <div class="nav-controls">
+            <a href="/control">Kontrola Rotacji Rośliny</a>
+        </div>
 
         <div class="update-indicator" id="update-status">
             Oczekiwanie na dane...
         </div>
 
         <div class="row">
-            <!-- Temperatura -->
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <div class="chart-title">🌡️ Temperatura</div>
+                    <div class="chart-title">Temperatura</div>
                     <div class="plot-div" id="temp-plot"></div>
                 </div>
             </div>
 
-            <!-- Ciśnienie -->
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <div class="chart-title">🌀 Ciśnienie Atmosferyczne</div>
+                    <div class="chart-title">Ciśnienie Atmosferyczne</div>
                     <div class="plot-div" id="pressure-plot"></div>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <!-- Wilgotność -->
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <div class="chart-title">💧 Wilgotność</div>
+                    <div class="chart-title">Wilgotność</div>
                     <div class="plot-div" id="humidity-plot"></div>
                 </div>
             </div>
 
-            <!-- Światło -->
             <div class="col-lg-6">
                 <div class="chart-container">
-                    <div class="chart-title">💡 Natężenie Światła</div>
+                    <div class="chart-title">Natężenie Światła</div>
                     <div class="plot-div" id="light-plot"></div>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <!-- UV -->
-            <div class="col-lg-12">
+            <div class="col-lg-6">
                 <div class="chart-container">
-                    <div class="chart-title">☀️ Promieniowanie UV</div>
+                    <div class="chart-title">Promieniowanie UV</div>
                     <div class="plot-div" id="uv-plot"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <div class="chart-title">Wilgotność Gleby</div>
+                    <div class="plot-div" id="moisture-plot"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Konfiguracja wspólna dla wszystkich wykresów
         const commonLayout = {
             xaxis: {
-                title: 'ID Pomiaru',
+                title: 'Czas',
+                type: 'date',
                 showgrid: true,
-                gridcolor: '#e0e0e0'
+                gridcolor: '#e0e0e0',
+                tickformat: '%H:%M:%S',
+                hoverformat: '%Y-%m-%d %H:%M:%S'
             },
             plot_bgcolor: '#fafafa',
             paper_bgcolor: '#ffffff',
@@ -139,7 +170,6 @@
             displayModeBar: false
         };
 
-        // Inicjalizacja 5 wykresów
         const charts = {
             temperature: {
                 id: 'temp-plot',
@@ -165,10 +195,14 @@
                 id: 'uv-plot',
                 color: '#9b59b6',
                 yaxis: { title: 'UV Index' }
+            },
+            moisture: {
+                id: 'moisture-plot',
+                color: '#16a085',
+                yaxis: { title: 'Wilgotność Gleby (%)' }
             }
         };
 
-        // Inicjalizuj każdy wykres
         Object.entries(charts).forEach(([sensor, config_data]) => {
             let trace = {
                 x: [],
@@ -192,9 +226,6 @@
             Plotly.newPlot(config_data.id, [trace], layout, config);
         });
 
-        /**
-         * Aktualizacja wszystkich wykresów
-         */
         function updateAllPlots(data) {
             Object.entries(charts).forEach(([sensor, chart_config]) => {
                 if (data[sensor] && data[sensor].length > 0) {
@@ -208,10 +239,9 @@
                 }
             });
 
-            // Wskaźnik aktualizacji
             let now = new Date().toLocaleTimeString('pl-PL');
             document.getElementById('update-status').textContent =
-                `✅ Ostatnia aktualizacja: ${now}`;
+                `Ostatnia aktualizacja: ${now}`;
             document.getElementById('update-status').classList.add('active');
 
             setTimeout(() => {
@@ -219,9 +249,6 @@
             }, 1000);
         }
 
-        /**
-         * Pobierz dane z API
-         */
         function fetchData() {
             fetch('/api/sensors/all')
                 .then(response => {
@@ -231,23 +258,17 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log('✅ Pobrano dane dla wszystkich czujników');
                     updateAllPlots(data);
                 })
                 .catch(error => {
-                    console.error('❌ Błąd podczas pobierania danych:', error);
+                    console.error('Błąd podczas pobierania danych:', error);
                     document.getElementById('update-status').textContent =
-                        '❌ Błąd połączenia z API';
+                        'Błąd połączenia z API';
                 });
         }
 
-        // Pierwsze pobranie danych
         fetchData();
-
-        // Automatyczna aktualizacja co 5 sekund
         setInterval(fetchData, 5000);
-
-        console.log('🌱 Multi-Sensor Dashboard zainicjalizowany - aktualizacja co 5s');
     </script>
 </body>
 </html>

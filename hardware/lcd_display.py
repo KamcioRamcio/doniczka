@@ -13,7 +13,7 @@ class LCD:
         conn = sqlite3.connect(self.db_file)
         cursor = conn.cursor()
 
-        query = """SELECT * FROM env_sensor ORDER BY id DESC LIMIT 1"""
+        query = """SELECT * FROM env_sensor e JOIN moist_sensor m ON e.time_pnt = m.time_pnt ORDER BY id DESC LIMIT 1"""
         cursor.execute(query)
         self.data = cursor.fetchall()
 
@@ -27,13 +27,14 @@ class LCD:
             "pressure": self.data[0][3],
             "humidity": self.data[0][4],
             "light": self.data[0][5],
-            "uv": self.data[0][6]
+            "uv": self.data[0][6],
+            "moisture": self.data[0][9]
         }
         return self.formated_data
 
 
     def display(self):
-        lcd = CharLCD('PCF8574', 0x27, port=1, charmap='A00',
+        lcd = CharLCD('PCF8574', 0x27, port=0, charmap='A00',
                       cols=16, rows=2, dotsize=8,
                       auto_linebreaks=True,
                       backlight_enabled=True)
@@ -44,7 +45,8 @@ class LCD:
         text = "temp:" + str(self.formated_data["temperature"]) + "C" + padding + "pres:" + str(
             int(self.formated_data["pressure"])) + "hPa" + padding + "hum:" + str(
             self.formated_data["humidity"]) + "%" + padding + "light:" + str(
-            int(self.formated_data["light"])) + "Lux" + padding + "UV:" + str(self.formated_data["uv"])
+            int(self.formated_data["light"])) + "Lux" + padding + "UV:" + str(self.formated_data["uv"], ) + padding + "moist:" + str(
+            int(self.formated_data["moisture"])) + "%"
 
         separator = ' ' * 4
         scroll_text = text + separator
