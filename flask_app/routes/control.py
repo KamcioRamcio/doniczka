@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, jsonify, request
 from flask import Blueprint, render_template, jsonify, request
 import sys
 from pathlib import Path
+import time
 
 project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
@@ -78,6 +79,11 @@ def reset_position():
 
     try:
         servo = get_servo()
+        while current_angle != 0:
+            step = -5 if current_angle > 0 else 5
+            current_angle += step
+            servo.set_servo_angle(current_angle)
+            time.sleep(0.2)
         servo.set_servo_angle(0)
         current_angle = 0
 
