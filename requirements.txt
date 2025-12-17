@@ -20,4 +20,5 @@ Flask==3.0.0
 plotly==5.21.0
 htmx-flask
 pandas
-
+pyserial
+pigpio
